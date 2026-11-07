@@ -2,7 +2,7 @@
 
 Failai:
 - index.html       - puslapis (viskas viename faile)
-- api/leetify.js   - Leetify duomenys (reitingai, statistika, paskutiniai mačai); išsaugoma 2 dienoms
+- api/leetify.js   - Leetify duomenys (reitingai, statistika, paskutiniai mačai); išsaugoma 6 valandoms
 - api/twitch.js    - ar kanalas dabar transliuoja (LIVE / OFFLINE, žaidimas, žiūrovai); tikrinama kas ~minutę
 
 ## Kaip paleisti (apie 5 min.)
@@ -22,3 +22,8 @@ Be raktų veikia per laisvą decapi.me pagalbininką (trečioji šalis). Patikim
 - STEAM64_ID     - kito žaidėjo Leetify (numatyta: 76561197970987115)
 - PREMIER_PEAK   - tavo aukščiausias Premier reitingas (numatyta: 26958)
 - TWITCH_CHANNEL - kanalo vardas (numatyta: burnascs2)
+
+## Jei Leetify skaičiai neatsinaujina
+1. Atsidaryk  <tavo-adresas>/api/leetify . Jei rodo klaidą ("error"), puslapis rodo išsaugotą kopiją (apačioje atsiranda ⚠ žymė).
+2. Dažniausia priežastis - Leetify užklausų limitas. Gauk nemokamą raktą: https://leetify.com/app/developer
+   ir įrašyk Vercel -> Settings -> Environment Variables:  LEETIFY_API_KEY  (tada Redeploy).
