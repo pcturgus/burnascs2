@@ -106,26 +106,14 @@ body{font-family:'Inter',sans-serif;background-color:#0a0e17;color:#F3F4F6;backg
 
 <!-- NAVBAR -->
 <header class="sticky top-0 z-40 bg-[#0a0e17]/90 backdrop-blur border-b border-white/5">
-  <div class="max-w-[1280px] mx-auto px-4 h-14 flex items-center gap-4">
-    <a href="#bio" class="flex items-center gap-2.5">
-      
-      <span class="burn-text">Burnas</span>
-    </a>
-    <nav class="hidden md:flex items-center gap-1 ml-4 text-sm font-semibold text-gray-400">
-      <a href="#bio" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5">Bio</a>
-      <a href="#matches" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5">Matches</a>
-      <a href="#cs2" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5">CS2 Settings</a>
-      <a href="#equipment" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5">Equipment</a>
-      <a href="#twitch" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5">Twitch</a>
-      <a href="#youtube" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5">YouTube</a>
-    </nav>
-    <div class="ml-auto flex items-center gap-2">
-      <div class="flex rounded-lg overflow-hidden border border-white/10" role="group" aria-label="Language"><button id="langLT" class="lang-btn" onclick="setLang('lt')">LT</button><button id="langEN" class="lang-btn" onclick="setLang('en')">EN</button></div>
-      <a href="https://streamlabs.com/burnascs/tip" target="_blank" rel="noopener" class="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-400 hover:to-orange-400 text-white text-xs font-extrabold tracking-wide transition shadow-lg shadow-pink-900/30 hover:-translate-y-0.5"><span class="text-sm leading-none heart">&#10084;</span><span>DONATE</span></a>
-      
-      <a href="https://twitch.tv/burnascs2" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-xs font-bold transition"><i class="fa-brands fa-twitch"></i><span>Twitch</span><span id="twDot" class="hidden w-2 h-2 rounded-full bg-red-500 animate-pulse"></span></a>
-      <a href="https://www.youtube.com/@BurnasCS2" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-xs font-bold transition"><i class="fa-brands fa-youtube"></i><span>YouTube</span></a>
+  <div class="max-w-[1280px] mx-auto px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+    <div></div>
+    <div class="flex items-center gap-2">
+      <a href="https://twitch.tv/burnascs2" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-xs font-bold transition"><i class="fa-brands fa-twitch"></i><span class="hidden sm:inline">Twitch</span><span id="twDot" class="hidden w-2 h-2 rounded-full bg-red-500 animate-pulse"></span></a>
+      <a href="https://streamlabs.com/burnascs/tip" target="_blank" rel="noopener" class="flex items-center gap-2 px-5 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-400 hover:to-orange-400 text-white text-sm font-extrabold tracking-wide transition shadow-lg shadow-pink-900/30 hover:-translate-y-0.5"><span class="text-sm leading-none heart">&#10084;</span><span>DONATE</span></a>
+      <a href="https://www.youtube.com/@BurnasCS2" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-xs font-bold transition"><i class="fa-brands fa-youtube"></i><span class="hidden sm:inline">YouTube</span></a>
     </div>
+    <div class="flex justify-end"><div class="flex rounded-lg overflow-hidden border border-white/10" role="group" aria-label="Language"><button id="langLT" class="lang-btn" onclick="setLang('lt')">LT</button><button id="langEN" class="lang-btn" onclick="setLang('en')">EN</button></div></div>
   </div>
 </header>
 
@@ -483,9 +471,9 @@ function renderLeetify(){
  h+='<div class="rounded-xl bg-black/25 border border-white/5 p-3 mb-3"><div class="flex flex-wrap items-center gap-x-6 gap-y-3">'
   +'<div><div class="pill mb-1">'+tt('Premier · Current')+'</div><div class="prem" style="--c:'+premColor(prem)+'">'+fmt(prem)+'</div></div>'
   +'<div><div class="pill mb-1">'+tt('Season Peak')+'</div><div class="prem" style="--c:'+premColor(peak)+'">'+fmt(peak)+'</div></div>'
-  +'<div class="flex-1 min-w-[220px]"><div class="relative pt-1 pb-7"><div class="flex h-2 rounded-full overflow-hidden">'+psegs+'</div>'
-  +'<div class="absolute top-0 -translate-x-1/2" style="left:'+pos(prem)+'%"><div class="w-0.5 h-4 bg-white mx-auto"></div><div class="text-[9px] font-extrabold text-white text-center tracking-wider">'+tt('NOW')+'</div></div>'
-  +'<div class="absolute top-0 -translate-x-1/2" style="left:'+pos(peak)+'%"><div class="w-0.5 h-4 bg-white mx-auto"></div><div class="text-[9px] font-extrabold text-white text-center tracking-wider">'+tt('PEAK')+'</div></div></div></div></div>'
+  +'<div class="flex-1 min-w-[220px]"><div class="relative pt-5 pb-5"><div class="flex h-2 rounded-full overflow-hidden">'+psegs+'</div>'
+  +'<div class="absolute top-0 -translate-x-1/2" style="left:'+pos(prem)+'%"><div class="text-[9px] font-extrabold text-white text-center tracking-wider leading-none mb-0.5">'+tt('NOW')+'</div><div class="w-0.5 h-2 bg-white mx-auto"></div></div>'
+  +'<div class="absolute bottom-0 -translate-x-1/2" style="left:'+pos(peak)+'%"><div class="w-0.5 h-2 bg-white mx-auto"></div><div class="text-[9px] font-extrabold text-white text-center tracking-wider leading-none mt-0.5">'+tt('PEAK')+'</div></div></div></div></div>'
   +'<div class="text-[10px] text-gray-500 mt-1">'+tt('Peak = highest Premier rating in recent matches (Leetify)')+'</div></div>';
  h+='<div class="rounded-xl bg-black/25 border border-white/5 p-3 mb-3"><div class="flex flex-wrap items-center gap-x-6 gap-y-3">'
   +'<div class="flex items-center gap-3">'+lvlBadge(lvl,54)+'<div><div class="pill mb-0.5">'+tt('FACEIT · Current')+'</div><div class="font-black text-2xl leading-none" style="color:'+lvlColor(lvl)+'">'+fmt(elo)+' <span class="text-xs font-bold text-gray-400">ELO</span></div><div class="text-[11px] text-gray-400 mt-1">'+lvlTxt+'</div></div></div>'
