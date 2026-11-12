@@ -23,11 +23,20 @@ body{font-family:'Inter',sans-serif;background-color:#0a0e17;color:#F3F4F6;backg
 .kv:nth-child(odd){background:rgba(255,255,255,.03)}
 .kv span{color:#9ca3af}.kv b{font-weight:700;color:#fff;text-align:right}
 .tbl{border:1px solid rgba(255,255,255,.06);border-radius:.75rem;overflow:hidden}
-.toc a{display:block;padding:.38rem .75rem;border-left:2px solid transparent;color:#9ca3af;font-size:.82rem;font-weight:500;transition:.15s}
-.toc a:hover{color:#fff}
-.toc a.on{color:#fb923c;border-left-color:#f97316;background:rgba(249,115,22,.07)}
-.toc .sub a{padding-left:1.5rem;font-size:.78rem}
-.toc .grp{font-weight:700;color:#e5e7eb}
+.toc{background:rgba(19,26,42,.72);border:1px solid rgba(255,255,255,.07);border-radius:1rem;padding:.8rem .6rem;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.toc a{position:relative;display:flex;align-items:center;gap:.65rem;padding:.5rem .7rem .5rem .9rem;border-radius:.65rem;color:#9ca3af;font-size:.84rem;font-weight:600;transition:background .2s,color .2s,box-shadow .25s}
+.toc a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.toc .grp{color:#e5e7eb;font-weight:700}
+.toc a.on{color:#fff;background:linear-gradient(90deg,rgba(249,115,22,.2),rgba(249,115,22,.04));box-shadow:0 0 22px rgba(249,115,22,.16),inset 0 0 0 1px rgba(249,115,22,.28)}
+.tic{width:1.7rem;height:1.7rem;flex:none;border-radius:.5rem;display:grid;place-items:center;font-size:.85rem;color:#fff;background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 50%,#000));transition:box-shadow .25s}
+.toc a.on .tic{box-shadow:0 0 14px color-mix(in srgb,var(--c) 65%,transparent)}
+.toc .sub{max-height:0;overflow:hidden;opacity:0;transition:max-height .3s ease,opacity .25s ease}
+.toc .sub.open{max-height:220px;opacity:1}
+.toc .sub a{padding:.38rem .7rem .38rem 3.05rem;font-size:.78rem;font-weight:500}
+.toc .sub a::before{content:"";position:absolute;left:2.15rem;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:#4b5563;transition:background .2s}
+.toc .sub a.on{color:#fb923c;background:rgba(249,115,22,.08);box-shadow:none}
+.toc .sub a.on::before{background:#f97316}
+.toc-ind{position:absolute;left:.3rem;top:0;width:3px;height:0;border-radius:3px;background:linear-gradient(#f97316,#fbbf24);box-shadow:0 0 10px rgba(249,115,22,.7);opacity:0;transition:top .32s cubic-bezier(.4,0,.2,1),height .32s cubic-bezier(.4,0,.2,1),opacity .2s;pointer-events:none;z-index:2}
 .theme-btn{padding:.35rem .7rem;font-size:.7rem;font-weight:700;border-radius:.5rem;color:#9ca3af;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25);transition:.2s;cursor:pointer}
 .theme-btn:hover{color:#fff}.theme-btn.on{background:rgba(249,115,22,.18);color:#fbbf24;border-color:rgba(249,115,22,.45)}
 .code{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:#d1d5db;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.07);border-radius:.7rem;padding:.75rem .9rem;word-break:break-all}
@@ -135,23 +144,16 @@ body{overflow-x:clip}
 
   <!-- OVERVIEW TOC -->
   <aside class="hidden lg:block w-56 flex-none sticky top-20 toc">
+    <span class="toc-ind"></span>
     <div class="pill mb-2 px-3">Overview</div>
-    <a href="#bio" data-s="bio" class="grp">Bio</a>
-    <a href="#matches" data-s="matches" class="grp">Matches</a>
-    <a href="#cs2" data-s="cs2" class="grp">CS2 Settings</a>
-    <div class="sub">
-      <a href="#mouse" data-s="mouse">Mouse</a>
-      <a href="#crosshair" data-s="crosshair">Crosshair</a>
-      <a href="#viewmodel" data-s="viewmodel">Viewmodel</a>
-      <a href="#video" data-s="video">Video Settings</a>
-    </div>
-    <a href="#equipment" data-s="equipment" class="grp">Equipment</a>
-    <div class="sub">
-      <a href="#gear" data-s="gear">Gear</a>
-      <a href="#pcspecs" data-s="pcspecs">PC Specs</a>
-    </div>
-    <a href="#twitch" data-s="twitch" class="grp">Twitch</a>
-    <a href="#youtube" data-s="youtube" class="grp">YouTube</a>
+    <a href="#bio" data-s="bio" class="grp"><span class="tic" style="--c:#f59e0b"><i class="fa-solid fa-user"></i></span>Bio</a>
+    <a href="#matches" data-s="matches" class="grp"><span class="tic" style="--c:#22c55e"><i class="fa-solid fa-chart-line"></i></span>Matches</a>
+    <a href="#cs2" data-s="cs2" class="grp"><span class="tic" style="--c:#f97316"><i class="fa-solid fa-sliders"></i></span>CS2 Settings</a>
+    <div class="sub" data-g="cs2"><a href="#mouse" data-s="mouse">Mouse</a><a href="#crosshair" data-s="crosshair">Crosshair</a><a href="#viewmodel" data-s="viewmodel">Viewmodel</a><a href="#video" data-s="video">Video Settings</a></div>
+    <a href="#equipment" data-s="equipment" class="grp"><span class="tic" style="--c:#3b82f6"><i class="fa-solid fa-display"></i></span>Equipment</a>
+    <div class="sub" data-g="equipment"><a href="#gear" data-s="gear">Gear</a><a href="#pcspecs" data-s="pcspecs">PC Specs</a></div>
+    <a href="#twitch" data-s="twitch" class="grp"><span class="tic" style="--c:#9146ff"><i class="fa-solid fa-twitch"></i></span>Twitch</a>
+    <a href="#youtube" data-s="youtube" class="grp"><span class="tic" style="--c:#ef4444"><i class="fa-solid fa-youtube"></i></span>YouTube</a>
   </aside>
 
   <main class="flex-1 min-w-0 flex flex-col gap-12">
@@ -287,7 +289,7 @@ body{overflow-x:clip}
           <div class="px-4">
             <div class="text-5xl text-purple-400 mb-3 flex justify-center"><i class="fa-brands fa-twitch"></i></div>
             <div class="font-extrabold text-lg">Stream</div>
-            <div class="text-xs text-gray-400 mt-1 mb-4">twitch.tv/burnascs2</div>
+            <div id="twNote" class="text-xs text-gray-400 mt-1 mb-4">twitch.tv/burnascs2</div>
             <button id="loadStream" class="cbtn" style="background:#9146ff">&#9654; Load stream</button>
           </div>
         </div>
@@ -297,6 +299,7 @@ body{overflow-x:clip}
           <div class="h3 !mb-0">Clips</div>
           <a href="https://twitch.tv/burnascs2/clips" target="_blank" class="text-xs font-bold text-purple-400 hover:text-purple-300">All clips &rarr;</a>
         </div>
+        <div id="twTabs" class="flex rounded-lg overflow-hidden border border-white/10 w-max mb-3" style="display:none"><button class="lang-btn on" data-s="top">Top</button><button class="lang-btn" data-s="latest">Latest</button></div>
         <div id="clipGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
       </div>
     </section>
@@ -336,6 +339,7 @@ var ICONS={
  'copy':'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
  'check':'<path d="M5 12l5 5 9-10"/>',
  'sliders':'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+ 'user':'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
  'chart-line':'<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>',
  'x-twitter':'<path d="M4 4l16 16M20 4L4 20"/>',
  'steam':'<circle cx="12" cy="12" r="9"/><circle cx="15" cy="9.5" r="2.5"/><circle cx="9" cy="15" r="2"/><path d="M10.5 13.5L14 11"/>',
@@ -386,7 +390,7 @@ var spy=new IntersectionObserver(function(es){
  es.forEach(function(e){vis[e.target.id]=e.isIntersecting?e.boundingClientRect.top:null});
  var best=null,bt=1e9;
  Object.keys(vis).forEach(function(k){if(vis[k]!==null&&links[k]&&Math.abs(vis[k])<bt){bt=Math.abs(vis[k]);best=k}});
- if(best){Object.keys(links).forEach(function(k){links[k].classList.toggle('on',k===best)})}
+ if(best){Object.keys(links).forEach(function(k){links[k].classList.toggle('on',k===best)});tocSync(best)}
 },{rootMargin:'-80px 0px -55% 0px',threshold:0});
 document.querySelectorAll('[data-sec][id]').forEach(function(s){spy.observe(s)});
 
@@ -395,24 +399,47 @@ var TW='burnascs2',HOST=location.hostname||'localhost';
 document.getElementById('loadStream').onclick=function(){
  document.getElementById('streamBox').innerHTML='<iframe src="https://player.twitch.tv/?channel='+TW+'&parent='+encodeURIComponent(HOST)+'&muted=true" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>';
 };
-// SAVO CLIPUS DĖK ČIA: id = Twitch clip ID (pvz. 'FunnyAwesomeClipName'); jei id tuščias, kortelė atveria tavo clipų puslapį
-var CLIPS=[
- {t:'Clutch 1v3',id:''},{t:'Ace su AK-47',id:''},{t:'AWP flick',id:''},
- {t:'Entry frag',id:''},{t:'Spray transfer',id:''},{t:'Geriausi momentai',id:''}
-];
-var grid=document.getElementById('clipGrid');
-CLIPS.forEach(function(c){
- var d=document.createElement('div');
- d.className='relative aspect-video rounded-xl overflow-hidden border border-white/10 cursor-pointer group transition hover:border-purple-500/60';
- d.style.background='linear-gradient(135deg,#1c1530,#0e0b18)';
- d.innerHTML='<span class="absolute top-2 left-2 text-[9px] font-extrabold tracking-widest px-2 py-1 rounded bg-purple-600">CLIP</span><span class="absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-purple-600/90 grid place-items-center group-hover:scale-110 transition"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#fff" d="M8 5v14l11-7z"/></svg></span><span class="tt absolute inset-x-0 bottom-0 px-3 pt-6 pb-2 text-xs font-bold" style="background:linear-gradient(0deg,rgba(0,0,0,.85),transparent)"></span>';
- d.querySelector('.tt').textContent=c.t;
- d.onclick=function(){
-  if(c.id){d.innerHTML='<iframe src="https://clips.twitch.tv/embed?clip='+encodeURIComponent(c.id)+'&parent='+encodeURIComponent(HOST)+'&autoplay=true" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>';d.onclick=null;i18nScan(d)}
-  else{window.open('https://twitch.tv/'+TW+'/clips','_blank')}
- };
- grid.appendChild(d);
-});
+// ===== TWITCH CLIPS: loaded automatically from /api/twitch-clips =====
+var TW_CLIPS=[],TW_SORT='top';
+function twDur(sec){sec=Math.round(sec||0);return Math.floor(sec/60)+':'+('0'+(sec%60)).slice(-2)}
+function renderTwClips(){
+ var grid=document.getElementById('clipGrid'),tabs=document.getElementById('twTabs');
+ if(!grid)return;
+ if(!TW_CLIPS.length){
+  if(tabs)tabs.style.display='none';
+  grid.innerHTML='<a href="https://twitch.tv/'+TW+'/clips" target="_blank" class="sm:col-span-2 lg:col-span-3 block text-center py-10 rounded-xl border border-white/10 bg-black/20 text-purple-300 font-bold hover:border-purple-500/60 transition">'+tt('Watch clips on Twitch →')+'</a>';
+  return;
+ }
+ if(tabs)tabs.style.display='';
+ var list=TW_CLIPS.slice();
+ if(TW_SORT==='latest')list.sort(function(a,b){return new Date(b.created)-new Date(a.created)});
+ else list.sort(function(a,b){return b.views-a.views});
+ list=list.slice(0,9);
+ grid.innerHTML='';
+ list.forEach(function(c){
+  var d=document.createElement('div');
+  d.className='relative aspect-video rounded-xl overflow-hidden border border-white/10 cursor-pointer group transition hover:border-purple-500/60';
+  d.style.background='#14101f'+(c.thumb?' url("'+c.thumb+'") center/cover no-repeat':'');
+  d.innerHTML='<span class="absolute top-2 left-2 text-[9px] font-extrabold tracking-widest px-2 py-1 rounded bg-purple-600">CLIP</span><span class="dur absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/70"></span><span class="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-purple-600/90 grid place-items-center group-hover:scale-110 transition"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#fff" d="M8 5v14l11-7z"/></svg></span><span class="absolute inset-x-0 bottom-0 px-3 pt-8 pb-2" style="background:linear-gradient(0deg,rgba(0,0,0,.9),transparent)"><span class="tt block text-xs font-bold truncate"></span><span class="mt block text-[10px] text-gray-300"></span></span>';
+  d.querySelector('.dur').textContent=twDur(c.duration);
+  d.querySelector('.tt').textContent=c.title||'';
+  d.querySelector('.mt').textContent=fmt(c.views||0)+' '+tt('views')+' \u00b7 '+fday(c.created);
+  d.onclick=function(){
+   d.innerHTML='<iframe src="https://clips.twitch.tv/embed?clip='+encodeURIComponent(c.id)+'&parent='+encodeURIComponent(HOST)+'&autoplay=true" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe><a href="'+(c.url||('https://twitch.tv/'+TW+'/clips'))+'" target="_blank" rel="noopener" style="position:absolute;top:8px;right:8px;z-index:2;background:rgba(0,0,0,.75);color:#fff;font:700 10px Inter,sans-serif;padding:5px 9px;border-radius:6px">Open on Twitch \u2197</a>';
+   d.onclick=null;i18nScan(d);
+  };
+  grid.appendChild(d);
+ });
+}
+function loadTwClips(){
+ try{
+  fetch('/api/twitch-clips').then(function(r){if(!r.ok)throw new Error('http');return r.json()}).then(function(j){
+   if(j&&j.clips&&j.clips.length){TW_CLIPS=j.clips}
+   renderTwClips();
+  }).catch(function(){renderTwClips()});
+ }catch(e){renderTwClips()}
+}
+document.querySelectorAll('#twTabs button').forEach(function(b){b.onclick=function(){TW_SORT=b.dataset.s;document.querySelectorAll('#twTabs button').forEach(function(x){x.classList.toggle('on',x===b)});renderTwClips()}});
 
 // ===== YOUTUBE (kanalas @BurnasCS2) =====
 // SAVO CLIPUS DĖK ČIA: id = YouTube video ID (pvz. 'dQw4w9WgXcQ'); jei id tuščias, kortelė atveria tavo kanalą
@@ -597,6 +624,7 @@ var TW_STATE=null,TW_AUTO=false;
 function renderTwitch(){
  var b=document.getElementById('twBadge'),m=document.getElementById('twMeta'),dot=document.getElementById('twDot');
  if(!b)return;
+ var nt=document.getElementById('twNote');if(nt)nt.textContent=(TW_STATE&&!TW_STATE.live?tt('Offline right now')+' \u00b7 ':'')+'twitch.tv/burnascs2';
  if(!TW_STATE){b.innerHTML='';if(m)m.textContent='';if(dot)dot.classList.add('hidden');return}
  var st=TW_STATE;
  if(st.live){
@@ -628,6 +656,7 @@ Object.assign(DICT,{"Source: Leetify · updated":"Šaltinis: Leetify · atnaujin
 Object.assign(DICT,{"Peak = highest Premier rating in recent matches (Leetify)": "Pikas = aukščiausias Premier reitingas per paskutinius mačus (Leetify)", "Premier rating": "Premier reitingas", "Recent matches": "Paskutiniai mačai", "Record": "Balansas", "Net change": "Pokytis", "Peak": "Pikas", "Lowest": "Žemiausias", "Date": "Data", "Map": "Žemėlapis", "Result": "Rezultatas", "Score": "Santykis", "Rating change": "Reitingo pokytis", "Premier": "Premier", "Leetify": "Leetify", "WIN": "LAIMĖTA", "LOSS": "PRALAIMĖTA", "TIE": "LYGIOSIOS", "Show more": "Rodyti daugiau", "Show less": "Rodyti mažiau", "LIVE": "TIESIOGIAI", "OFFLINE": "NETRANSLIUOJA", "viewers": "žiūrovų"});
 Object.assign(DICT,{"Refresh Rate": "Atnaujinimo dažnis", "None": "Nėra", "Performance": "Našumas", "CYAN": "TURKIS", "Length (px)": "Ilgis (px)", "Thickness (px)": "Storis (px)", "Gap (px)": "Tarpas (px)", "Outline Red": "Kontūro raudona", "Outline Green": "Kontūro žalia", "Outline Blue": "Kontūro mėlyna", "Outline Opacity": "Kontūro skaidrumas", "Sniper Width": "Snaiperio plotis", "Use Crosshair Color for Scope Dot": "Taikiklio spalva taškui taikiklyje", "Scope Dot Scale": "Taško dydis taikiklyje"});
 Object.assign(DICT,{"saved snapshot (live data unavailable)":"išsaugota kopija (gyvi duomenys nepasiekiami)"});
+Object.assign(DICT,{"Top": "Populiariausi", "Latest": "Naujausi", "views": "peržiūrų", "Watch clips on Twitch →": "Žiūrėti klipus Twitch →", "Open on Twitch ↗": "Atidaryti Twitch ↗", "Offline right now": "Šiuo metu netransliuoja"});
 var LANG='en',REG=[];
 function i18nScan(root){
  var w=document.createTreeWalker(root||document.body,NodeFilter.SHOW_TEXT,null),n;
@@ -651,7 +680,7 @@ function setLang(l){
  document.getElementById('langLT').classList.toggle('on',LANG==='lt');
  document.getElementById('langEN').classList.toggle('on',LANG==='en');
  applyLang();
- if(typeof renderLeetify==='function'){renderLeetify();renderMatches();renderTwitch();}
+ if(typeof renderLeetify==='function'){renderLeetify();renderMatches();renderTwitch();if(typeof renderTwClips==='function')renderTwClips();}
 }
 (function(){
  var saved=null;try{saved=localStorage.getItem('burnas_lang')}catch(e){}
@@ -659,9 +688,25 @@ function setLang(l){
  i18nScan(document.body);
  setLang(def);
 })();
+// ===== Overview menu: open sub-items of the current section + sliding indicator =====
+var TOC_GROUP={cs2:'cs2',mouse:'cs2',crosshair:'cs2',viewmodel:'cs2',video:'cs2',equipment:'equipment',gear:'equipment',pcspecs:'equipment'};
+function placeInd(){
+ var a=document.querySelector('.toc a.on'),ind=document.querySelector('.toc-ind');
+ if(!a||!ind)return;
+ ind.style.top=a.offsetTop+'px';ind.style.height=a.offsetHeight+'px';ind.style.opacity='1';
+}
+function tocSync(best){
+ var g=TOC_GROUP[best];
+ document.querySelectorAll('.toc .sub').forEach(function(el){el.classList.toggle('open',el.getAttribute('data-g')===g)});
+ placeInd();setTimeout(placeInd,340);
+}
+window.addEventListener('load',function(){placeInd()});
+window.addEventListener('resize',function(){placeInd()});
+
 var _rz;window.addEventListener('resize',function(){clearTimeout(_rz);_rz=setTimeout(function(){if(typeof renderPremChart==='function')renderPremChart()},200)});
 loadLeetify();
 loadTwitch();
+loadTwClips();
 setInterval(loadTwitch,60000);
 </script>
 </body>
