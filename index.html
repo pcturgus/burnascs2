@@ -744,10 +744,6 @@ function tocSync(best){
 function renderTocBadges(){
  var d=(typeof LT!=='undefined'&&LT)||LT_FALLBACK;
  var set=function(k,h){var el=document.querySelector('.tbd[data-b="'+k+'"]');if(el)el.innerHTML=h};
- var pr=d.ranks&&d.ranks.premier;
- set('bio',pr?'<span style="color:'+premColor(pr)+'">'+fmt(pr)+'</span>':'');
- var lm=(d.recent_matches||[])[0];
- set('matches',lm?'<span class="tb2 '+(lm.o==='win'?'w':lm.o==='loss'?'l':'t')+'">'+(lm.o==='win'?'W':lm.o==='loss'?'L':'T')+'</span>':'');
  var st=(typeof TW_STATE!=='undefined')?TW_STATE:null;
  set('twitch',st?(st.live?'<span class="tb2 live"><i></i>'+tt('LIVE')+'</span>':'<span class="tb2 off">'+tt('OFFLINE')+'</span>'):'');
  var mt=document.querySelector('#mnav a[data-s="twitch"]');if(mt)mt.classList.toggle('live',!!(st&&st.live));
