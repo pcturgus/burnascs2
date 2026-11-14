@@ -210,6 +210,7 @@ body{overflow-x:clip}
     <section id="matches" data-sec class="flex flex-col gap-5">
       <h2 class="h2" aria-label="Matches"><span class="h2ic" style="--c:#22c55e"><i class="fa-solid fa-chart-line"></i></span></h2>
       <div class="card p-5"><div id="premChart"></div></div>
+      <div class="card p-5"><div id="mapStats"></div></div>
       <div class="card p-5"><div id="matchTable"></div></div>
     </section>
 
@@ -619,7 +620,7 @@ function renderPremChart(){
   +'<line id="pvl" y1="'+pt+'" y2="'+(H-pb)+'" stroke="#fff" stroke-opacity=".3" style="display:none"/><circle id="pvd" r="5" fill="#fff" style="display:none"/></svg>';
  var title=LANG==='lt'?('Paskutiniai '+n+' mačų'):('Last '+n+' matches');
  var h='<div class="flex items-center gap-2 mb-3"><span class="w-1.5 h-4 rounded-sm bg-gradient-to-b from-orange-500 to-amber-400"></span><span class="font-extrabold text-sm tracking-wide">'+tt('Premier rating')+'</span><span class="pill">'+title+'</span></div>'
-  +'<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">'+mStat('Record',wins+'W \u2013 '+loss+'L')+mStat('Net change',sgn(net),net>=0?'#34d399':'#f87171')+mStat('Peak',fmt(mx),premColor(mx))+mStat('Lowest',fmt(mn),premColor(mn))+'</div>'
+  +'<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">'+mStat('Record',wins+'W \u2013 '+loss+'L')+mStat('Net change',sgn(net),net>=0?'#34d399':'#f87171')+mStat('Peak',fmt(mx),premColor(mx))+mStat('Lowest',fmt(mn),premColor(mn))+mStat('Streak',strk(all).txt,strk(all).col)+mStat('Best win streak',strk(all).best+'W','#34d399')+'</div>'
   +'<div class="relative">'+svg+'<div class="ptip" style="display:none;position:absolute;top:0;transform:translateX(-50%);background:rgba(10,14,23,.96);border:1px solid rgba(255,255,255,.14);border-radius:.5rem;padding:.35rem .6rem;font-size:11px;white-space:nowrap;z-index:5;pointer-events:none"></div></div>';
  box.innerHTML=h;
  var sv=box.querySelector('svg'),tip=box.querySelector('.ptip'),vl=box.querySelector('#pvl'),vd=box.querySelector('#pvd');
@@ -635,29 +636,143 @@ function renderPremChart(){
  });
  sv.addEventListener('pointerleave',function(){vl.style.display='none';vd.style.display='none';tip.style.display='none'});
 }
+// ===== MATCHES v2: aim columns, filters, sorting, sessions, map stats, trends =====
+var MT_ALL=false,MT_RES='all',MT_MAP='all',MT_SORT={k:'t',d:-1},MT_OPEN={};
+var AIM=[
+ {k:'rx',en:'Reaction',lt:'Reakcija',sh:['Reaction','Reakcija'],unit:' ms',dec:0,low:true},
+ {k:'pa',en:'Preaim',lt:'Preaim',sh:['Preaim','Preaim'],unit:'\u00b0',dec:1,low:true},
+ {k:'ac',en:'Accuracy',lt:'Tikslumas',sh:['Acc.','Tiksl.'],unit:'%',dec:1,low:false},
+ {k:'hs',en:'Headshot',lt:'\u012e galv\u0105',sh:['HS','HS'],unit:'%',dec:1,low:false},
+ {k:'sp',en:'Spray',lt:'Serija',sh:['Spray','Serija'],unit:'%',dec:1,low:false}
+];
+function isn(x){return typeof x==='number'&&isFinite(x)}
+function mean(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null}
+function avgOf(rows,k){return mean(rows.map(function(r){return r[k]}).filter(isn))}
+function fv(a,v){return isn(v)?fmt(v,a.dec)+a.unit:'\u2014'}
+function mapColor(m){var k=String(m||'').replace(/^(de|cs)_/,'');return ({mirage:'#f59e0b',inferno:'#ef4444',nuke:'#94a3b8',dust2:'#eab308',anubis:'#14b8a6',ancient:'#22c55e',cache:'#a855f7',overpass:'#3b82f6',train:'#64748b',vertigo:'#06b6d4'})[k]||'#9ca3af'}
+function goodness(avg,v,low){if(!isn(v)||!isn(avg)||!avg)return 0;var d=(v-avg)/avg;if(low)d=-d;return d>.08?1:d<-.08?-1:0}
+function gcol(g){return g>0?'#34d399':g<0?'#f87171':'#e5e7eb'}
+function dayKey(iso){var d=new Date(iso);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function prepRows(){
+ var all=((LT||LT_FALLBACK).recent_matches||[]).slice();
+ all.forEach(function(m,i){var older=null;for(var j=i+1;j<all.length;j++){if(all[j].rt===11){older=all[j];break}}m._dl=(m.rt===11&&older)?m.r-older.r:null});
+ return all;
+}
+function strk(all){
+ var cur={o:null,n:0},best=0,run=0,i;
+ if(all.length){cur.o=all[0].o;for(i=0;i<all.length&&all[i].o===cur.o;i++)cur.n++}
+ for(i=all.length-1;i>=0;i--){if(all[i].o==='win'){run++;if(run>best)best=run}else run=0}
+ return {txt:cur.n+(cur.o==='win'?'W':cur.o==='loss'?'L':'T'),col:cur.o==='win'?'#34d399':cur.o==='loss'?'#f87171':'#d1d5db',best:best};
+}
+function tagFor(m){
+ var s2=m.s;if(!s2||m.o==='tie')return null;
+ var a=s2[0],b=s2[1],lt=LANG==='lt';
+ if(Math.max(a,b)>=16)return [lt?'Prat\u0119simas':'OT','#a78bfa'];
+ if(m.o==='win'&&b<=4)return [lt?'Dominavo':'Dominated','#34d399'];
+ if(m.o==='loss'&&a<=4)return [lt?'Sutriu\u0161kinta':'Stomped','#f87171'];
+ if(Math.abs(a-b)<=2)return [lt?'Atkaklus':'Close','#fbbf24'];
+ return null;
+}
+function spark(vals,col){
+ if(vals.length<2)return '';
+ var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals),rg=(mx-mn)||1;
+ var pts=vals.map(function(v,i){return (i*100/(vals.length-1)).toFixed(1)+','+(24-(v-mn)/rg*22).toFixed(1)}).join(' ');
+ return '<svg viewBox="0 0 100 26" preserveAspectRatio="none" class="w-full" style="height:26px;display:block"><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+}
+function aimTrendsHtml(all){
+ var chron=all.slice().reverse(),h='',n=0;
+ AIM.forEach(function(a){
+  var vals=chron.map(function(m){return m[a.k]}).filter(isn);
+  if(vals.length<4)return;
+  n++;
+  var avg=mean(vals),r10=mean(vals.slice(-10)),prev=vals.slice(-30,-10),pa=prev.length?mean(prev):null,tr=0;
+  if(pa){var d=(r10-pa)/pa;if(a.low)d=-d;tr=d>.03?1:d<-.03?-1:0}
+  var col=tr>0?'#34d399':tr<0?'#f87171':'#9ca3af',txt=tr>0?tt('Better'):tr<0?tt('Worse'):tt('Stable'),ar=tr>0?'\u25b2':tr<0?'\u25bc':'\u25cf';
+  h+='<div class="rounded-lg bg-black/25 border border-white/5 px-3 py-2"><div class="pill">'+(LANG==='lt'?a.lt:a.en)+'</div><div class="font-extrabold text-base mt-0.5">'+fv(a,avg)+'</div>'+spark(vals.slice(-30),col)+'<div class="text-[10px] font-bold mt-0.5" style="color:'+col+'">'+ar+' '+txt+'</div></div>';
+ });
+ if(!n)return '';
+ return '<div class="flex items-center gap-2 mb-2"><span class="w-1.5 h-4 rounded-sm bg-gradient-to-b from-orange-500 to-amber-400"></span><span class="font-extrabold text-sm tracking-wide">'+tt('Aim trends')+'</span><span class="pill">'+tt('last 10 vs previous 20')+'</span></div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-6">'+h+'</div>';
+}
+
+function renderMapStats(){
+ var box=document.getElementById('mapStats');if(!box)return;
+ var all=prepRows(),by={};
+ all.forEach(function(m){var k=m.m||'?',o=by[k]||(by[k]={m:k,n:0,w:0,l:0,t:0,net:0,dn:0});o.n++;if(m.o==='win')o.w++;else if(m.o==='loss')o.l++;else o.t++;if(m._dl!=null){o.net+=m._dl;o.dn++}});
+ var arr=Object.keys(by).map(function(k){var o=by[k];o.wr=o.w/o.n;return o}).sort(function(a,b){return b.n-a.n});
+ if(!arr.length){box.innerHTML='';return}
+ var best=null,worst=null;
+ arr.filter(function(o){return o.n>=5}).forEach(function(o){if(!best||o.wr>best.wr)best=o;if(!worst||o.wr<worst.wr)worst=o});
+ if(best&&worst&&best.m===worst.m)worst=null;
+ var cards=arr.map(function(o){
+  var avgc=o.dn?o.net/o.dn:null,sel=MT_MAP===o.m,col=mapColor(o.m);
+  var badge=(best&&best.m===o.m)?'<span title="'+tt('Best')+'" style="color:#fbbf24">\u2605</span>':(worst&&worst.m===o.m)?'<span title="'+tt('Worst')+'" style="color:#f87171">\u25bc</span>':'';
+  return '<div class="mcard" data-m="'+o.m+'" style="cursor:pointer;border-radius:.75rem;padding:.7rem .8rem;background:rgba(0,0,0,.25);border:1px solid '+(sel?col:'rgba(255,255,255,.06)')+';box-shadow:'+(sel?'0 0 16px '+col+'44':'none')+';transition:.2s">'
+   +'<div class="flex items-center gap-2"><span style="width:10px;height:10px;border-radius:3px;background:'+col+'"></span><b class="text-sm">'+mapName(o.m)+'</b><span class="ml-auto text-xs">'+badge+'</span></div>'
+   +'<div class="text-[10px] text-gray-400 mt-1">'+o.n+' '+tt('games')+' \u00b7 '+o.w+'W\u2013'+o.l+'L'+(o.t?'\u2013'+o.t+'T':'')+'</div>'
+   +'<div class="h-1.5 rounded-full bg-black/40 overflow-hidden mt-2"><div class="h-full rounded-full" style="width:'+Math.round(o.wr*100)+'%;background:'+(o.wr>=.5?'#34d399':'#f87171')+'"></div></div>'
+   +'<div class="flex justify-between text-[11px] mt-1.5"><b style="color:'+(o.wr>=.5?'#34d399':'#f87171')+'">'+Math.round(o.wr*100)+'%</b><span style="color:'+(avgc==null?'#9ca3af':avgc>=0?'#34d399':'#f87171')+'">'+(avgc==null?'\u2014':sgn(Math.round(avgc)))+' <span class="text-gray-500">'+tt('Avg change')+'</span></span></div></div>';
+ }).join('');
+ var note='';
+ if(best)note='<span class="pill">'+tt('Best')+': '+mapName(best.m)+' '+Math.round(best.wr*100)+'%'+(worst?' \u00b7 '+tt('Worst')+': '+mapName(worst.m)+' '+Math.round(worst.wr*100)+'%':'')+'</span>';
+ box.innerHTML='<div class="flex flex-wrap items-center gap-2 mb-3"><span class="w-1.5 h-4 rounded-sm bg-gradient-to-b from-orange-500 to-amber-400"></span><span class="font-extrabold text-sm tracking-wide">'+tt('Map stats')+'</span>'+note+'</div><div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">'+cards+'</div>';
+ box.querySelectorAll('.mcard').forEach(function(c){c.onclick=function(){var k=c.getAttribute('data-m');MT_MAP=(MT_MAP===k)?'all':k;MT_ALL=false;renderMapStats();renderMatchTable()}});
+}
+
 function renderMatchTable(){
- var d=LT||LT_FALLBACK,rows=d.recent_matches||[];
  var box=document.getElementById('matchTable');if(!box)return;
- var lim=MT_ALL?rows.length:Math.min(10,rows.length),tr='',i,j;
+ var all=prepRows(),rows=all.slice(),i,j,lt=LANG==='lt';
+ var maps={};all.forEach(function(m){if(m.m)maps[m.m]=1});
+ var avg={};AIM.forEach(function(a){avg[a.k]=avgOf(all,a.k)});
+ rows=rows.filter(function(m){return (MT_RES==='all'||m.o===MT_RES)&&(MT_MAP==='all'||m.m===MT_MAP)});
+ var sk=MT_SORT.k,sd=MT_SORT.d;
+ var val=function(m){if(sk==='t')return new Date(m.t).getTime();if(sk==='m')return mapName(m.m);if(sk==='o')return m.o==='win'?2:m.o==='tie'?1:0;if(sk==='s')return m.s?m.s[0]-m.s[1]:null;return isn(m[sk])?m[sk]:null};
+ rows.sort(function(a,b){var x=val(a),y=val(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;if(typeof x==='string')return sd*x.localeCompare(y);return sd*(x-y)});
+ var sess=(sk==='t'&&sd===-1&&MT_RES==='all'&&MT_MAP==='all'),dayAgg={};
+ rows.forEach(function(m){var k=dayKey(m.t),a=dayAgg[k]||(dayAgg[k]={n:0,w:0,l:0,net:0});a.n++;if(m.o==='win')a.w++;else if(m.o==='loss')a.l++;if(m._dl!=null)a.net+=m._dl});
+ var lim=MT_ALL?rows.length:Math.min(10,rows.length),tr='',lastDay=null;
  for(i=0;i<lim;i++){
-  var m=rows[i],older=null;
-  for(j=i+1;j<rows.length;j++){if(rows[j].rt===11){older=rows[j];break}}
-  var dl=(m.rt===11&&older)?m.r-older.r:null,lr=m.l||0;
-  tr+='<tr class="border-t border-white/5"><td class="py-2 pr-3 text-xs text-gray-400 whitespace-nowrap">'+fday(m.t)+'<span class="hidden sm:inline"> '+ftime(m.t)+'</span></td><td class="py-2 pr-3 font-semibold">'+mapName(m.m)+'</td>'
+  var m=rows[i],key=m.i||m.t,open=!!MT_OPEN[key];
+  if(sess){var dk=dayKey(m.t);if(dk!==lastDay){lastDay=dk;var ag=dayAgg[dk];
+   tr+='<tr><td colspan="12" class="pt-4 pb-1"><div class="flex items-center gap-2 text-[11px] font-bold text-gray-300"><span class="w-1 h-3 rounded-sm bg-orange-500"></span>'+fday(m.t)+'<span class="text-gray-500 font-semibold">\u00b7 '+ag.n+' '+tt('games')+' \u00b7 '+ag.w+'W\u2013'+ag.l+'L</span><span class="ml-auto" style="color:'+(ag.net>=0?'#34d399':'#f87171')+'">'+sgn(ag.net)+'</span></div></td></tr>'}}
+  var dl=m._dl,lr=m.l||0,tg=tagFor(m);
+  var cells='<td class="py-2 pr-3 text-xs text-gray-400 whitespace-nowrap"><span class="text-gray-500">'+(open?'\u25be':'\u25b8')+'</span> '+fday(m.t)+'<span class="hidden sm:inline"> '+ftime(m.t)+'</span></td>'
+   +'<td class="py-2 pr-3 font-semibold whitespace-nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+mapColor(m.m)+';margin-right:6px"></span>'+mapName(m.m)+'</td>'
    +'<td class="py-2 pr-3"><span class="px-2 py-0.5 rounded border text-[10px] font-extrabold '+outCls(m.o)+'">'+outLabel(m.o)+'</span></td>'
-   +'<td class="py-2 pr-3 font-bold whitespace-nowrap">'+(m.s?m.s[0]+'\u2013'+m.s[1]:'')+'</td>'
+   +'<td class="py-2 pr-3 font-bold whitespace-nowrap">'+(m.s?m.s[0]+'\u2013'+m.s[1]:'')+(tg?'<div style="font-size:9px;font-weight:700;color:'+tg[1]+'">'+tg[0]+'</div>':'')+'</td>'
    +'<td class="py-2 pr-3 font-bold" style="color:'+(dl==null?'#9ca3af':dl>=0?'#34d399':'#f87171')+'">'+(dl==null?'\u2014':sgn(dl))+'</td>'
-   +'<td class="py-2 pr-3 font-black" style="color:'+(m.rt===11?premColor(m.r):'#9ca3af')+'">'+(m.rt===11?fmt(m.r):'\u2014')+'</td>'
-   +'<td class="py-2 text-xs font-bold hidden sm:table-cell" style="color:'+(lr>=0?'#34d399':'#f87171')+'">'+(lr>=0?'+':'\u2212')+Math.abs(lr).toFixed(2)+'</td></tr>';
+   +'<td class="py-2 pr-3 font-black" style="color:'+(m.rt===11?premColor(m.r):'#9ca3af')+'">'+(m.rt===11?fmt(m.r):'\u2014')+'</td>';
+  AIM.forEach(function(a){cells+='<td class="py-2 pr-3 text-xs font-semibold hidden md:table-cell" style="color:'+gcol(goodness(avg[a.k],m[a.k],a.low))+'">'+fv(a,m[a.k])+'</td>'});
+  cells+='<td class="py-2 text-xs font-bold hidden sm:table-cell" style="color:'+(lr>=0?'#34d399':'#f87171')+'">'+(lr>=0?'+':'\u2212')+Math.abs(lr).toFixed(2)+'</td>';
+  tr+='<tr class="border-t border-white/5 cursor-pointer hover:bg-white/5" data-k="'+key+'">'+cells+'</tr>';
+  if(open){
+   var tiles=AIM.map(function(a){var g=goodness(avg[a.k],m[a.k],a.low),df=(isn(m[a.k])&&isn(avg[a.k]))?m[a.k]-avg[a.k]:null;
+    return '<div class="rounded-lg bg-black/25 border border-white/5 px-3 py-2"><div class="pill">'+(lt?a.lt:a.en)+'</div><div class="font-extrabold text-sm mt-0.5" style="color:'+gcol(g)+'">'+fv(a,m[a.k])+'</div><div class="text-[10px] text-gray-500">'+tt('Your average')+': '+fv(a,avg[a.k])+(df==null?'':' ('+(df>=0?'+':'\u2212')+fmt(Math.abs(df),a.dec)+')')+'</div></div>'}).join('');
+   var rounds=m.s?(m.s[0]+m.s[1]):null;
+   tr+='<tr><td colspan="12" class="pb-3 pt-1"><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">'+tiles+'</div><div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-gray-400">'
+    +(rounds!=null?'<span>'+tt('Rounds')+': <b class="text-gray-200">'+rounds+'</b></span>':'')
+    +'<span>Leetify: <b style="color:'+(lr>=0?'#34d399':'#f87171')+'">'+(lr>=0?'+':'\u2212')+Math.abs(lr).toFixed(2)+'</b></span>'
+    +(m.i?'<a class="ml-auto font-bold text-orange-400 hover:text-orange-300" target="_blank" rel="noopener" href="https://leetify.com/app/match-details/'+m.i+'/overview">'+tt('Open on Leetify \u2197')+'</a>':'')
+    +'</div></td></tr>';
+  }
  }
- var th=function(t){return '<th class="py-2 pr-3 text-left pill font-bold">'+tt(t)+'</th>'};
- var h='<div class="flex items-center gap-2 mb-3"><span class="w-1.5 h-4 rounded-sm bg-gradient-to-b from-orange-500 to-amber-400"></span><span class="font-extrabold text-sm tracking-wide">'+tt('Recent matches')+'</span></div>'
-  +'<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr>'+th('Date')+th('Map')+th('Result')+th('Score')+th('Rating change')+th('Premier')+'<th class="py-2 text-left pill font-bold hidden sm:table-cell">'+tt('Leetify')+'</th>'+'</tr></thead><tbody>'+tr+'</tbody></table></div>';
+ var colsDef=[['t','Date',''],['m','Map',''],['o','Result',''],['s','Score',''],['_dl','Rating change',''],['r','Premier','']];
+ var th=function(k,name,cls){var arrow=MT_SORT.k===k?(MT_SORT.d===1?' \u25b2':' \u25bc'):'';return '<th class="py-2 pr-3 text-left pill font-bold cursor-pointer select-none '+cls+'" data-sk="'+k+'">'+name+arrow+'</th>'};
+ var head=colsDef.map(function(c){return th(c[0],tt(c[1]),c[2])}).join('')+AIM.map(function(a){return th(a.k,a.sh[lt?1:0],'hidden md:table-cell')}).join('')+th('l',tt('Leetify'),'hidden sm:table-cell');
+ var resBtns=[['all','All'],['win','Wins'],['loss','Losses'],['tie','Ties']].map(function(r){return '<button class="lang-btn'+(MT_RES===r[0]?' on':'')+'" data-r="'+r[0]+'">'+tt(r[1])+'</button>'}).join('');
+ var opts='<option value="all">'+tt('All maps')+'</option>'+Object.keys(maps).sort().map(function(k){return '<option value="'+k+'"'+(MT_MAP===k?' selected':'')+'>'+mapName(k)+'</option>'}).join('');
+ var h=aimTrendsHtml(all)
+  +'<div class="flex items-center gap-2 mb-3"><span class="w-1.5 h-4 rounded-sm bg-gradient-to-b from-orange-500 to-amber-400"></span><span class="font-extrabold text-sm tracking-wide">'+tt('Recent matches')+'</span></div>'
+  +'<div class="flex flex-wrap items-center gap-2 mb-3"><div class="flex rounded-lg overflow-hidden border border-white/10">'+resBtns+'</div><select id="mtMap" class="bg-black/30 border border-white/10 rounded-lg text-xs px-2 py-1.5 text-gray-200">'+opts+'</select><span class="text-[11px] text-gray-500 ml-auto">'+tt('Showing')+' '+Math.min(lim,rows.length)+' / '+rows.length+'</span></div>'
+  +'<div class="overflow-x-auto"><table class="w-full text-[13px]"><thead><tr>'+head+'</tr></thead><tbody>'+(rows.length?tr:'<tr><td colspan="12" class="py-6 text-center text-gray-500">'+tt('No matches match these filters')+'</td></tr>')+'</tbody></table></div>';
  if(rows.length>10)h+='<button id="mtToggle" class="cbtn mt-4">'+tt(MT_ALL?'Show less':'Show more')+'</button>';
  box.innerHTML=h;
- var b=document.getElementById('mtToggle');if(b)b.onclick=function(){MT_ALL=!MT_ALL;renderMatchTable()};
+ box.querySelectorAll('[data-sk]').forEach(function(t){t.onclick=function(){var k=t.getAttribute('data-sk');if(MT_SORT.k===k)MT_SORT.d=-MT_SORT.d;else MT_SORT={k:k,d:(k==='m'?1:-1)};renderMatchTable()}});
+ box.querySelectorAll('[data-r]').forEach(function(b){b.onclick=function(){MT_RES=b.getAttribute('data-r');renderMatchTable()}});
+ var sel=box.querySelector('#mtMap');if(sel)sel.onchange=function(){MT_MAP=sel.value;renderMapStats();renderMatchTable()};
+ box.querySelectorAll('tr[data-k]').forEach(function(r){r.onclick=function(e){if(e.target.closest&&e.target.closest('a'))return;var k=r.getAttribute('data-k');MT_OPEN[k]=!MT_OPEN[k];renderMatchTable()}});
+ var tg2=document.getElementById('mtToggle');if(tg2)tg2.onclick=function(){MT_ALL=!MT_ALL;renderMatchTable()};
 }
-function renderMatches(){renderPremChart();renderMatchTable()}
+function renderMatches(){renderPremChart();renderMapStats();renderMatchTable()}
 
 // ===== TWITCH live status (/api/twitch, checked every minute) =====
 var TW_STATE=null,TW_AUTO=false;
@@ -698,6 +813,7 @@ Object.assign(DICT,{"Peak = highest Premier rating in recent matches (Leetify)":
 Object.assign(DICT,{"Refresh Rate": "Atnaujinimo dažnis", "None": "Nėra", "Performance": "Našumas", "CYAN": "TURKIS", "Length (px)": "Ilgis (px)", "Thickness (px)": "Storis (px)", "Gap (px)": "Tarpas (px)", "Outline Red": "Kontūro raudona", "Outline Green": "Kontūro žalia", "Outline Blue": "Kontūro mėlyna", "Outline Opacity": "Kontūro skaidrumas", "Sniper Width": "Snaiperio plotis", "Use Crosshair Color for Scope Dot": "Taikiklio spalva taškui taikiklyje", "Scope Dot Scale": "Taško dydis taikiklyje"});
 Object.assign(DICT,{"saved snapshot (live data unavailable)":"išsaugota kopija (gyvi duomenys nepasiekiami)"});
 Object.assign(DICT,{"Top": "Populiariausi", "Latest": "Naujausi", "views": "peržiūrų", "Watch clips on Twitch →": "Žiūrėti klipus Twitch →", "Open on Twitch ↗": "Atidaryti Twitch ↗", "Offline right now": "Šiuo metu netransliuoja"});
+Object.assign(DICT,{"Map stats": "Žemėlapių statistika", "Aim trends": "Taiklumo tendencijos", "All": "Visi", "Wins": "Laimėti", "Losses": "Pralaimėti", "Ties": "Lygiosios", "All maps": "Visi žemėlapiai", "Showing": "Rodoma", "Streak": "Serija", "Best win streak": "Ilgiausia laimėjimų serija", "Better": "gerėja", "Worse": "blogėja", "Stable": "stabilu", "Your average": "Tavo vidurkis", "Open on Leetify ↗": "Atidaryti Leetify ↗", "Avg change": "vid. pokytis", "Best": "Geriausias", "Worst": "Blogiausias", "games": "mačų", "Rounds": "Raundai", "last 10 vs previous 20": "paskutiniai 10 vs ankstesni 20", "No matches match these filters": "Pagal šiuos filtrus mačų nėra"});
 var LANG='en',REG=[];
 function i18nScan(root){
  var w=document.createTreeWalker(root||document.body,NodeFilter.SHOW_TEXT,null),n;
