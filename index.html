@@ -718,11 +718,33 @@ function renderMapStats(){
  box.querySelectorAll('.mcard').forEach(function(c){c.onclick=function(){var k=c.getAttribute('data-m');MT_MAP=(MT_MAP===k)?'all':k;MT_ALL=false;renderMapStats();renderMatchTable()}});
 }
 
+
+function xtraHtml(m,lt){
+ if(!isn(m.k))return '';
+ var kd=m.d?m.k/m.d:m.k,hsp=m.k?Math.round((m.hsk||0)/m.k*100):0;
+ var mk=(m.mk||[]).map(function(n,i){return n>0?(i+2)+'K\u00d7'+n:''}).filter(Boolean).join(' \u00b7 ')||'\u2014';
+ var T=function(l,v,c){return '<div class="rounded-lg bg-black/25 border border-white/5 px-3 py-2"><div class="pill">'+l+'</div><div class="font-extrabold text-sm mt-0.5" style="color:'+(c||'#e5e7eb')+'">'+v+'</div></div>'};
+ var rt=function(x){return isn(x)?((x>=0?'+':'\u2212')+Math.abs(x).toFixed(2)):'\u2014'};
+ var tl=[
+  T('K / D / A',m.k+' / '+m.d+' / '+m.a+' <span style="font-size:10px;color:#9ca3af">('+kd.toFixed(2)+')</span>',kd>=1?'#34d399':'#f87171'),
+  T('ADR',isn(m.adr)?fmt(m.adr,0):'\u2014'),
+  T(lt?'\u017dala':'Damage',isn(m.dmg)?fmt(m.dmg):'\u2014'),
+  T(lt?'HS nu\u017eudymai':'HS kills',(m.hsk||0)+' ('+hsp+'%)'),
+  T('MVP',isn(m.mvp)?m.mvp:'\u2014'),
+  T(lt?'Daugkartin\u0117s':'Multi-kills',mk),
+  T(lt?'Trade (pavyko / galimyb\u0117s)':'Trade (done / chances)',isn(m.trd)?(m.trd+' / '+m.tro):'\u2014'),
+  T(lt?'\u0160viesos (pataik\u0117 / mesta)':'Flashes (hit / thrown)',isn(m.flh)?(m.flh+' / '+m.flt):'\u2014'),
+  T(lt?'CT reitingas':'CT rating',rt(m.ctl),isn(m.ctl)&&m.ctl<0?'#f87171':'#34d399'),
+  T(lt?'T reitingas':'T rating',rt(m.tl),isn(m.tl)&&m.tl<0?'#f87171':'#34d399')
+ ].join('');
+ return '<div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2">'+tl+'</div>';
+}
+
 function renderMatchTable(){
  var box=document.getElementById('matchTable');if(!box)return;
  var all=prepRows(),rows=all.slice(),i,j,lt=LANG==='lt';
  var maps={};all.forEach(function(m){if(m.m)maps[m.m]=1});
- var avg={};AIM.forEach(function(a){avg[a.k]=avgOf(all,a.k)});
+ var avg={};AIM.forEach(function(a){avg[a.k]=avgOf(all,a.k)});avg.adr=avgOf(all,'adr');
  rows=rows.filter(function(m){return (MT_RES==='all'||m.o===MT_RES)&&(MT_MAP==='all'||m.m===MT_MAP)});
  var sk=MT_SORT.k,sd=MT_SORT.d;
  var val=function(m){if(sk==='t')return new Date(m.t).getTime();if(sk==='m')return mapName(m.m);if(sk==='o')return m.o==='win'?2:m.o==='tie'?1:0;if(sk==='s')return m.s?m.s[0]-m.s[1]:null;return isn(m[sk])?m[sk]:null};
@@ -733,7 +755,7 @@ function renderMatchTable(){
  for(i=0;i<lim;i++){
   var m=rows[i],key=m.i||m.t,open=!!MT_OPEN[key];
   if(sess){var dk=dayKey(m.t);if(dk!==lastDay){lastDay=dk;var ag=dayAgg[dk];
-   tr+='<tr><td colspan="12" class="pt-4 pb-1"><div class="flex items-center gap-2 text-[11px] font-bold text-gray-300"><span class="w-1 h-3 rounded-sm bg-orange-500"></span>'+fday(m.t)+'<span class="text-gray-500 font-semibold">\u00b7 '+ag.n+' '+tt('games')+' \u00b7 '+ag.w+'W\u2013'+ag.l+'L</span><span class="ml-auto" style="color:'+(ag.net>=0?'#34d399':'#f87171')+'">'+sgn(ag.net)+'</span></div></td></tr>'}}
+   tr+='<tr><td colspan="14" class="pt-4 pb-1"><div class="flex items-center gap-2 text-[11px] font-bold text-gray-300"><span class="w-1 h-3 rounded-sm bg-orange-500"></span>'+fday(m.t)+'<span class="text-gray-500 font-semibold">\u00b7 '+ag.n+' '+tt('games')+' \u00b7 '+ag.w+'W\u2013'+ag.l+'L</span><span class="ml-auto" style="color:'+(ag.net>=0?'#34d399':'#f87171')+'">'+sgn(ag.net)+'</span></div></td></tr>'}}
   var dl=m._dl,lr=m.l||0,tg=tagFor(m);
   var cells='<td class="py-2 pr-3 text-xs text-gray-400 whitespace-nowrap"><span class="text-gray-500">'+(open?'\u25be':'\u25b8')+'</span> '+fday(m.t)+'<span class="hidden sm:inline"> '+ftime(m.t)+'</span></td>'
    +'<td class="py-2 pr-3 font-semibold whitespace-nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+mapColor(m.m)+';margin-right:6px"></span>'+mapName(m.m)+'</td>'
@@ -741,14 +763,17 @@ function renderMatchTable(){
    +'<td class="py-2 pr-3 font-bold whitespace-nowrap">'+(m.s?m.s[0]+'\u2013'+m.s[1]:'')+(tg?'<div style="font-size:9px;font-weight:700;color:'+tg[1]+'">'+tg[0]+'</div>':'')+'</td>'
    +'<td class="py-2 pr-3 font-bold" style="color:'+(dl==null?'#9ca3af':dl>=0?'#34d399':'#f87171')+'">'+(dl==null?'\u2014':sgn(dl))+'</td>'
    +'<td class="py-2 pr-3 font-black" style="color:'+(m.rt===11?premColor(m.r):'#9ca3af')+'">'+(m.rt===11?fmt(m.r):'\u2014')+'</td>';
-  AIM.forEach(function(a){cells+='<td class="py-2 pr-3 text-xs font-semibold hidden md:table-cell" style="color:'+gcol(goodness(avg[a.k],m[a.k],a.low))+'">'+fv(a,m[a.k])+'</td>'});
+  var kd=(isn(m.k)&&isn(m.d))?(m.d?m.k/m.d:m.k):null;
+  cells+='<td class="py-2 pr-3 text-xs font-semibold whitespace-nowrap hidden md:table-cell">'+(isn(m.k)?(m.k+' / '+m.d+' / '+m.a+'<div style="font-size:9px;font-weight:700;color:'+(kd>=1?'#34d399':'#f87171')+'">'+kd.toFixed(2)+' K/D</div>'):'\u2014')+'</td>';
+  cells+='<td class="py-2 pr-3 text-xs font-semibold hidden md:table-cell" style="color:'+gcol(goodness(avg.adr,m.adr,false))+'">'+(isn(m.adr)?fmt(m.adr,0):'\u2014')+'</td>';
+  AIM.forEach(function(a){cells+='<td class="py-2 pr-3 text-xs font-semibold hidden lg:table-cell" style="color:'+gcol(goodness(avg[a.k],m[a.k],a.low))+'">'+fv(a,m[a.k])+'</td>'});
   cells+='<td class="py-2 text-xs font-bold hidden sm:table-cell" style="color:'+(lr>=0?'#34d399':'#f87171')+'">'+(lr>=0?'+':'\u2212')+Math.abs(lr).toFixed(2)+'</td>';
   tr+='<tr class="border-t border-white/5 cursor-pointer hover:bg-white/5" data-k="'+key+'">'+cells+'</tr>';
   if(open){
    var tiles=AIM.map(function(a){var g=goodness(avg[a.k],m[a.k],a.low),df=(isn(m[a.k])&&isn(avg[a.k]))?m[a.k]-avg[a.k]:null;
     return '<div class="rounded-lg bg-black/25 border border-white/5 px-3 py-2"><div class="pill">'+(lt?a.lt:a.en)+'</div><div class="font-extrabold text-sm mt-0.5" style="color:'+gcol(g)+'">'+fv(a,m[a.k])+'</div><div class="text-[10px] text-gray-500">'+tt('Your average')+': '+fv(a,avg[a.k])+(df==null?'':' ('+(df>=0?'+':'\u2212')+fmt(Math.abs(df),a.dec)+')')+'</div></div>'}).join('');
-   var rounds=m.s?(m.s[0]+m.s[1]):null;
-   tr+='<tr><td colspan="12" class="pb-3 pt-1"><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">'+tiles+'</div><div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-gray-400">'
+   var rounds=m.s?(m.s[0]+m.s[1]):null,xt=xtraHtml(m,lt);
+   tr+='<tr><td colspan="14" class="pb-3 pt-1"><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">'+tiles+'</div>'+xt+'<div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-gray-400">'
     +(rounds!=null?'<span>'+tt('Rounds')+': <b class="text-gray-200">'+rounds+'</b></span>':'')
     +'<span>Leetify: <b style="color:'+(lr>=0?'#34d399':'#f87171')+'">'+(lr>=0?'+':'\u2212')+Math.abs(lr).toFixed(2)+'</b></span>'
     +(m.i?'<a class="ml-auto font-bold text-orange-400 hover:text-orange-300" target="_blank" rel="noopener" href="https://leetify.com/app/match-details/'+m.i+'/overview">'+tt('Open on Leetify \u2197')+'</a>':'')
@@ -757,13 +782,13 @@ function renderMatchTable(){
  }
  var colsDef=[['t','Date',''],['m','Map',''],['o','Result',''],['s','Score',''],['_dl','Rating change',''],['r','Premier','']];
  var th=function(k,name,cls){var arrow=MT_SORT.k===k?(MT_SORT.d===1?' \u25b2':' \u25bc'):'';return '<th class="py-2 pr-3 text-left pill font-bold cursor-pointer select-none '+cls+'" data-sk="'+k+'">'+name+arrow+'</th>'};
- var head=colsDef.map(function(c){return th(c[0],tt(c[1]),c[2])}).join('')+AIM.map(function(a){return th(a.k,a.sh[lt?1:0],'hidden md:table-cell')}).join('')+th('l',tt('Leetify'),'hidden sm:table-cell');
+ var head=colsDef.map(function(c){return th(c[0],tt(c[1]),c[2])}).join('')+th('k','K / D / A','hidden md:table-cell')+th('adr','ADR','hidden md:table-cell')+AIM.map(function(a){return th(a.k,a.sh[lt?1:0],'hidden lg:table-cell')}).join('')+th('l',tt('Leetify'),'hidden sm:table-cell');
  var resBtns=[['all','All'],['win','Wins'],['loss','Losses'],['tie','Ties']].map(function(r){return '<button class="lang-btn'+(MT_RES===r[0]?' on':'')+'" data-r="'+r[0]+'">'+tt(r[1])+'</button>'}).join('');
  var opts='<option value="all">'+tt('All maps')+'</option>'+Object.keys(maps).sort().map(function(k){return '<option value="'+k+'"'+(MT_MAP===k?' selected':'')+'>'+mapName(k)+'</option>'}).join('');
  var h=aimTrendsHtml(all)
   +'<div class="flex items-center gap-2 mb-3"><span class="w-1.5 h-4 rounded-sm bg-gradient-to-b from-orange-500 to-amber-400"></span><span class="font-extrabold text-sm tracking-wide">'+tt('Recent matches')+'</span></div>'
   +'<div class="flex flex-wrap items-center gap-2 mb-3"><div class="flex rounded-lg overflow-hidden border border-white/10">'+resBtns+'</div><select id="mtMap" class="bg-black/30 border border-white/10 rounded-lg text-xs px-2 py-1.5 text-gray-200">'+opts+'</select><span class="text-[11px] text-gray-500 ml-auto">'+tt('Showing')+' '+Math.min(lim,rows.length)+' / '+rows.length+'</span></div>'
-  +'<div class="overflow-x-auto"><table class="w-full text-[13px]"><thead><tr>'+head+'</tr></thead><tbody>'+(rows.length?tr:'<tr><td colspan="12" class="py-6 text-center text-gray-500">'+tt('No matches match these filters')+'</td></tr>')+'</tbody></table></div>';
+  +'<div class="overflow-x-auto"><table class="w-full text-[13px]"><thead><tr>'+head+'</tr></thead><tbody>'+(rows.length?tr:'<tr><td colspan="14" class="py-6 text-center text-gray-500">'+tt('No matches match these filters')+'</td></tr>')+'</tbody></table></div>';
  if(rows.length>10)h+='<button id="mtToggle" class="cbtn mt-4">'+tt(MT_ALL?'Show less':'Show more')+'</button>';
  box.innerHTML=h;
  box.querySelectorAll('[data-sk]').forEach(function(t){t.onclick=function(){var k=t.getAttribute('data-sk');if(MT_SORT.k===k)MT_SORT.d=-MT_SORT.d;else MT_SORT={k:k,d:(k==='m'?1:-1)};renderMatchTable()}});
